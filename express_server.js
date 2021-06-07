@@ -4,10 +4,10 @@ const PORT = 8080;
 const bodyParser = require("body-parser");
 
 const generateRandomString = function() {
-  const charaters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  for ( let i = 0; i < charaters.length; i++ ) {
+  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  for ( let i = 0; i < 6; i++ ) {
     result += characters.charAt(Math.floor(Math.random() * 
-    charaters.length));
+    6));
  }
  return result;
 }
@@ -19,7 +19,6 @@ app.set("view engine", "ejs");
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com",
-  "S152tx": "https://www.tsn.ca"
 };
 
 app.get("/", (req, res) => {
@@ -57,3 +56,7 @@ app.post("/urls", (req, res) => {
   res.send("Ok");        
 });
 
+app.get("/u/:shortURL", (req, res) => {
+  const longURL = urlDatabase[req.params.shortURL];
+  res.redirect(longURL);
+});
