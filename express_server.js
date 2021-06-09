@@ -41,6 +41,10 @@ app.get("/urls/new", (req, res) => {
   res.render("urls_new", { username });
 });
 
+app.get('/urls/error', (req, res) => {
+  res.send('<h1>You should login first!</h1>');
+});
+
 app.get("/urls/:shortURL", (req, res) => {
   const templateVars = { 
     shortURL: req.params.shortURL, 
