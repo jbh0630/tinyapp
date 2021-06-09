@@ -7,22 +7,16 @@
     <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
       <div class="navbar-nav">
         <a class="nav-item nav-link" href="/urls">My URLs</a>
-        <% if (!username) { %>
-        <a class="nav-item nav-link" href="/urls/error">Create New URL</a>
-        <% } else { %>  
-          <a class="nav-item nav-link" href="/urls/new">Create New URL</a>
-       <% } %>
+        <a class="nav-item nav-link" href="/urls/new">Create New URL</a>
       </div>
     </div>
-    <div>
-      <% if (!username) { %>
-        <form method="POST" action="/urls/login">
-          <input name="username" onfocus="this.value='';" value="Username"/>
-          <button type="submit" class="btn btn-outline-dark">Login</button>
-        </form>
+    <div class="navbar-nav">
+      <% if (!userId) { %>
+        <a class="nav-item nav-link" href="/login">Login</a>
+        <a class="nav-item nav-link" href="/register">Register</a>
       <% } else { %>  
-        <form method="POST" action="/urls/logout">
-          <label>Logged In As: <%= username %>!&nbsp&nbsp&nbsp&nbsp</label>
+        <form method="POST" action="/logout">
+          <label>Logged In As: <%= userId %>!&nbsp&nbsp&nbsp&nbsp</label>
           <button type="submit" class="btn btn-outline-dark">Logout</button>
         </form>
      <% } %>
