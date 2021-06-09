@@ -1,19 +1,12 @@
 const express = require('express');
 const app = express();
 const PORT = 8080;
-const bodyParser = require("body-parser");
 const cookieParser = require('cookie-parser')
+const { v4: uuidv4 } = require('uuid');
 
-const generateRandomString = function() {
-  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  for ( let i = 0; i < 6; i++ ) {
-    result += characters.charAt(Math.floor(Math.random() * 
-    6));
- }
- return result;
-}
 
-app.use(bodyParser.urlencoded({extended: true}));
+app.use(express.urlencoded({ extended: false }));
+
 app.use(cookieParser());
 
 app.set("view engine", "ejs");
@@ -44,7 +37,8 @@ app.get("/urls", (req, res) => {
 });
 
 app.get("/urls/new", (req, res) => {
-  res.render("urls_new");
+  const username = req.cookies["username"];
+  res.render("urls_new", { username });
 });
 
 app.get("/urls/:shortURL", (req, res) => {
@@ -64,8 +58,10 @@ app.get("/urls/:shortURL", (req, res) => {
 });
 
 app.post("/urls", (req, res) => {
-  console.log(req.body); 
-  res.send("Ok");        
+  const newLongURL = req.body.longURL;
+  const newShortURL = uuidv4().split('-')[1];
+  urlDatabase[newShortURL] = newLongURL;
+  res.redirect('/urls');
 });
 
 app.post('/urls/:shortURL/delete', (req, res) => {
