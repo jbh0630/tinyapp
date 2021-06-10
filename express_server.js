@@ -4,6 +4,7 @@ const PORT = 8080;
 const cookieParser = require('cookie-parser')
 const { v4: uuidv4 } = require('uuid');
 const morgan = require('morgan');
+const bcrypt = require('bcrypt');
 
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
@@ -134,14 +135,18 @@ app.post('/register', (req, res) => {
   }
   
   const newUserId = generateId();
-  const newUser = {
-    id: newUserId,
-    email,
-    password
-  };
 
-  users[newUserId] = newUser;
-  res.redirect('/login');
+  bcrypt.genSalt(10, (err, salt) => {
+    bcrypt.hash(password, salt, (err, hash) => {
+      const newUser = {
+        id: newUserId,
+        email,
+        password: hash
+      };
+      users[newUserId] = newUser;
+      res.redirect('/login');
+    });
+  });
 });
 
 app.post('/login', (req, res) => {
@@ -161,13 +166,14 @@ app.post('/login', (req, res) => {
     return res.status(401).send('You entered invalid Email or Password! Try Again!');
   }
 
-  if (foundUser.password !== password) {
-    return res.status(401).send('Incorrect Password. Try Again!');
-  }
-
-  res.cookie('userId', foundUser.id);
-  res.redirect('/urls');
-
+  bcrypt.compare(password, foundUser.password, (err, result) => {
+    if (!result) {
+      return res.status(401).send('Incorrect Password. Try Again!');
+    }
+    
+    res.cookie('userId', foundUser.id);
+    res.redirect('/urls');
+  });
 });
 
 app.listen(PORT, () => {
