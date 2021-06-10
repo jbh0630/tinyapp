@@ -41,7 +41,6 @@ const urlsForUser = function(id) {
       };
     };
   }
-  console.log({ foundURL, userId: id });
   return { foundURL, userId: id };
 };
 
@@ -122,7 +121,6 @@ app.post('/logout', (req, res) => {
 });
 
 app.post('/register', (req, res) => {
-  console.log(req.body.email);
   const email = req.body.email;
   const password = req.body.password;
 
@@ -147,7 +145,6 @@ app.post('/register', (req, res) => {
 });
 
 app.post('/login', (req, res) => {
-  console.log(req.body.email);
   const email = req.body.email;
   const password = req.body.password;
 
