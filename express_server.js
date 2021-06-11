@@ -1,15 +1,19 @@
 const express = require('express');
 const app = express();
 const PORT = 8080;
-const cookieParser = require('cookie-parser')
 const { v4: uuidv4 } = require('uuid');
 const morgan = require('morgan');
 const bcrypt = require('bcrypt');
+const cookieSession = require('cookie-session');
+
+app.set("view engine", "ejs");
 
 app.use(express.urlencoded({ extended: false }));
-app.use(cookieParser());
 app.use(morgan('dev'));
-app.set("view engine", "ejs");
+app.use(cookieSession({
+  name: 'session',
+  keys: ['asdfdsf', 'key2']
+}));
 
 const generateId = () => {
   return uuidv4().split('-')[1];
@@ -24,7 +28,7 @@ const users = {
   "userRandomID": {
     id: "aJ48lW", 
     email: "user@example.com", 
-    password: "1234"
+    password: "123"
   },
  "user2RandomID": {
     id: "user2RandomID", 
@@ -58,7 +62,7 @@ app.get("/hello", (req, res) => {
 });
 
 app.get("/urls", (req, res) => {
-  const userId = req.cookies["userId"];
+  const userId = req.session.userId;
   if (!userId) {
     return res.redirect('/login');
   }
@@ -67,7 +71,8 @@ app.get("/urls", (req, res) => {
 });
 
 app.get("/urls/new", (req, res) => {
-  const userId = req.cookies["userId"];
+  const userId = req.session.userId;
+
   if (!userId) {
     return res.render('login');
   }
@@ -78,30 +83,33 @@ app.get("/urls/:shortURL", (req, res) => {
   const templateVars = { 
     shortURL: req.params.shortURL, 
     longURL: urlDatabase[req.params.shortURL].longURL,
-    userId: req.cookies["userId"] };
+    userId: req.session.userId };
 
   res.render("urls_show", templateVars);
 });
 
 app.get('/register', (req, res) => {
-  const userId = req.cookies["userId"];
+  const userId = req.session.userId;
   res.render('register', { userId });
 });
 
 app.get('/login', (req, res) => {
-  const userId = req.cookies["userId"];
+  const userId = req.session.userId;
   res.render('login', { userId });
 });
 
 app.post("/urls", (req, res) => {
-  const newLongURL = req.body.longURL;
+  let newLongURL = req.body.longURL;
+  if (!newLongURL.includes('http://')) {
+    newLongURL = 'http://' + newLongURL;
+  }
   const newShortURL = generateId();
-  urlDatabase[newShortURL] = { longURL: newLongURL, userID: req.cookies["userId"] };
+  urlDatabase[newShortURL] = { longURL: newLongURL, userID: req.session.userId };
   res.redirect('/urls');
 });
 
 app.post('/urls/:shortURL/delete', (req, res) => {
-  if (!req.cookies["userId"]) {
+  if (!req.session.userId) {
     return res.status(401).send('<h1>You must login first!</h1>');
   }
   const toDelete = req.params.shortURL;
@@ -111,13 +119,11 @@ app.post('/urls/:shortURL/delete', (req, res) => {
 
 app.post('/urls/:shortURL/edit', (req, res) => {
   const toEdit = req.params.shortURL;
-  urlDatabase[toEdit] = req.body.url;
-  res.redirect('/urls');
-});
-
-app.post('/logout', (req, res) => {
-  const userId = req.cookies["userId"];
-  res.clearCookie('userId', userId);
+  let longURL = req.body.url;
+  if (!(longURL).includes('http://')) {
+    longURL = 'http://' + longURL;
+  }
+  urlDatabase[toEdit].longURL = longURL;
   res.redirect('/urls');
 });
 
@@ -171,9 +177,14 @@ app.post('/login', (req, res) => {
       return res.status(401).send('Incorrect Password. Try Again!');
     }
     
-    res.cookie('userId', foundUser.id);
+    req.session.userId = foundUser.id;
     res.redirect('/urls');
   });
+});
+
+app.post('/logout', (req, res) => {
+  req.session = null;
+  res.redirect('/urls');
 });
 
 app.listen(PORT, () => {
