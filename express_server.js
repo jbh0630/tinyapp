@@ -28,12 +28,12 @@ const users = {
   "userRandomID": {
     id: "aJ48lW", 
     email: "user@example.com", 
-    password: "123"
+    password: "$2b$10$4Ve79F5wczm0nfSMzcoR8.3leFqUGuHKCESkSNY6JEqchUpsOy0cK"
   },
  "user2RandomID": {
     id: "user2RandomID", 
     email: "user2@example.com", 
-    password: "123"
+    password: "$2b$10$2wkYZRbPTGL9RdSLxxSrq.1.pt4IU.euC/W/dMRyg5bcW1NepqT2y"
   }
 }
 
@@ -74,7 +74,7 @@ app.get("/urls/new", (req, res) => {
   const userId = req.session.userId;
 
   if (!userId) {
-    return res.render('login');
+    return res.redirect('/login');
   }
   res.render("urls_new", { userId });
 });
@@ -176,7 +176,8 @@ app.post('/login', (req, res) => {
     if (!result) {
       return res.status(401).send('Incorrect Password. Try Again!');
     }
-    
+    console.log(password);
+    console.log(foundUser.password);
     req.session.userId = foundUser.id;
     res.redirect('/urls');
   });
