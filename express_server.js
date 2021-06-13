@@ -1,3 +1,4 @@
+//Required libraries
 const express = require('express');
 const app = express();
 const PORT = 8080;
@@ -15,7 +16,7 @@ app.use(cookieSession({
   keys: ['asdfdsf', 'key2']
 }));
 
-
+//dummy database
 const urlDatabase = {
   b6UTxQ: { longURL: "https://www.tsn.ca", userID: "aJ48lW" },
   i3BoGr: { longURL: "https://www.google.ca", userID: "aJ48lW" }
@@ -34,50 +35,52 @@ const users = {
   }
 }
 
-
+//default page
 app.get("/", (req, res) => {
-  const userId = req.session.userId;
-  if (!userId) {
-    return res.redirect('/login');
+  const email = req.session.email;
+  if (!email) {
+    return res.status(401).send('<h1>You must login first!</h1><a href="/login">Go to login page</a>');
   } 
   res.redirect('/urls');
 });
 
-app.get("/urls.json", (req, res) => {
-  res.json(urlDatabase);
-});
-
-app.get("/hello", (req, res) => {
-  res.send("<html><body>Hello <b>World</b></body></html>\n");
-});
-
+//if user logged in, find the data from database that matches with logged in users data
 app.get("/urls", (req, res) => {
   const userId = req.session.userId;
   if (!userId) {
-    return res.redirect('/login');
+    return res.status(401).send('<h1>You must login first!</h1><a href="/login">Go to login page</a>');
   }
     
   res.render('urls_index', urlsForUser(userId, urlDatabase, users)); 
 });
 
+//if user logged in, go to create url page
 app.get("/urls/new", (req, res) => {
   const email = req.session.email;
 
   if (!email) {
-    return res.redirect('/login');
+    return res.status(401).send('<h1>You must login first!</h1><a href="/login">Go to login page</a>');
   }
   res.render("urls_new", { email });
 });
 
+//if user logged in, go to long url page
 app.get("/u/:shortURL", (req, res) => {
   const longURL = urlDatabase[req.params.shortURL].longURL;
+
+  const email = req.session.email;
+
+  if (!email) {
+    return res.status(401).send('<h1>You must login first!</h1><a href="/login">Go to login page</a>');
+  }
   res.redirect(longURL);
 });
 
+//if user logged in, go to url edit page
 app.get("/urls/:shortURL", (req, res) => {
-  const userId = req.session.userId;
-  if (!userId) {
-    return res.redirect('/login');
+  const email = req.session.email;
+  if (!email) {
+    return res.status(401).send('<h1>You must login first!</h1><a href="/login">Go to login page</a>');
   }
   const templateVars = { 
     shortURL: req.params.shortURL, 
@@ -89,45 +92,48 @@ app.get("/urls/:shortURL", (req, res) => {
   res.render("urls_show", templateVars);
 });
 
+//go to register page
 app.get('/register', (req, res) => {
   const email = req.session.email;
   res.render('register', { email });
 });
 
+//go to login page
 app.get('/login', (req, res) => {
   const email = req.session.email;
   res.render('login', { email });
 });
 
+//go to main page
 app.post("/urls", (req, res) => {
-  let newLongURL = req.body.longURL;
-  if (!newLongURL.includes('http://')) {
-    newLongURL = 'http://' + newLongURL;
-  }
   const newShortURL = generateId();
-  urlDatabase[newShortURL] = { longURL: newLongURL, userID: req.session.userId };
+  urlDatabase[newShortURL] = { longURL: req.body.longURL, userID: req.session.userId };
   res.redirect('/urls');
 });
 
+//if user logged in and click edit button, post delete url
 app.post('/urls/:shortURL/delete', (req, res) => {
   if (!req.session.userId) {
-    return res.status(401).send('<h1>You must login first!</h1>');
+    return res.status(401).send('<h1>You must login first!</h1><a href="/login">Go to login page</a>');
   }
   const toDelete = req.params.shortURL;
   delete urlDatabase[toDelete];
   res.redirect('/urls');
 });
 
+//if user logged in and click delete button, post edit url
 app.post('/urls/:shortURL/edit', (req, res) => {
-  const toEdit = req.params.shortURL;
-  let longURL = req.body.url;
-  if (!(longURL).includes('http://')) {
-    longURL = 'http://' + longURL;
+  if (!req.session.userId) {
+    return res.status(401).send('<h1>You must login first!</h1><a href="/login">Go to login page</a>');
   }
+  const toEdit = req.params.shortURL;
+  const longURL = req.body.url;
+  
   urlDatabase[toEdit].longURL = longURL;
   res.redirect('/urls');
 });
 
+//handling register page
 app.post('/register', (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
@@ -150,11 +156,14 @@ app.post('/register', (req, res) => {
         password: hash
       };
       users[newUserId] = newUser;
+      req.session.userId = newUserId;
+      req.session.email = email;
       return res.redirect('/urls');
     });
   });
 });
 
+//handling login page
 app.post('/login', (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
@@ -182,11 +191,13 @@ app.post('/login', (req, res) => {
   });
 });
 
+//if user click logout button, set the session as null
 app.post('/logout', (req, res) => {
   req.session = null;
   res.redirect('/urls');
 });
 
+//check the port that app running on 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}`);
 });
