@@ -66,6 +66,10 @@ app.get("/urls/new", (req, res) => {
 
 //if user logged in, go to long url page
 app.get("/u/:shortURL", (req, res) => {
+  
+  if (!urlDatabase[shortURL]) {
+    return res.status(404).send(`You do not have such "${shortURL}", Try others!\n<a href="/urls">Go to main page</a>`);
+  }
   const longURL = urlDatabase[req.params.shortURL].longURL;
 
   const email = req.session.email;
@@ -78,6 +82,11 @@ app.get("/u/:shortURL", (req, res) => {
 
 //if user logged in, go to url edit page
 app.get("/urls/:shortURL", (req, res) => {
+  const shortURL = req.params.shortURL;
+
+  if (!urlDatabase[shortURL]) {
+    return res.status(404).send(`You do not have such "${shortURL}", Try others!\n<a href="/urls">Go to main page</a>`);
+  }
   const email = req.session.email;
   if (!email) {
     return res.status(401).send('<h1>You must login first!</h1><a href="/login">Go to login page</a>');
