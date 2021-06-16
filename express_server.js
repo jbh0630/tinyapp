@@ -25,12 +25,14 @@ const urlDatabase = {
 const users = { 
   "aJ48lW": {
     id: "aJ48lW", 
-    email: "user@example.com", 
+    email: "user@example.com",
+    //eauql to 1234 
     password: "$2b$10$4Ve79F5wczm0nfSMzcoR8.3leFqUGuHKCESkSNY6JEqchUpsOy0cK"
   },
  "user2RandomID": {
     id: "user2RandomID", 
     email: "user2@example.com", 
+    //eauql to 123 
     password: "$2b$10$2wkYZRbPTGL9RdSLxxSrq.1.pt4IU.euC/W/dMRyg5bcW1NepqT2y"
   }
 }
@@ -67,7 +69,7 @@ app.get("/urls/new", (req, res) => {
 //if user logged in, go to long url page
 app.get("/u/:shortURL", (req, res) => {
   const shortURL = req.params.shortURL;
-  if (!urlDatabase[shortURL]) {
+  if (!urlDatabase[shortURL] || urlDatabase[shortURL].userID !== req.session.userId) {
     return res.status(404).send(`<h1>You do not have such "${shortURL}", Try others!</h1><a href="/urls">Go to main page</a>`);
   }
   const longURL = urlDatabase[req.params.shortURL].longURL;
@@ -84,7 +86,7 @@ app.get("/u/:shortURL", (req, res) => {
 app.get("/urls/:shortURL", (req, res) => {
   const shortURL = req.params.shortURL;
 
-  if (!urlDatabase[shortURL]) {
+  if (!urlDatabase[shortURL] || urlDatabase[shortURL].userID !== req.session.userId) {
     return res.status(404).send(`<h1>You do not have such "${shortURL}", Try others!</h1><a href="/urls">Go to main page</a>`);
   }
   const email = req.session.email;
